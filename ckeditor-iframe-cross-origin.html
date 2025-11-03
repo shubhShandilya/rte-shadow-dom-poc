@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKEditor in Cross-Origin iframe - POC Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #cc6600;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #cc6600;
+            margin-top: 30px;
+        }
+        .info-box {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .warning-box {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+        }
+        .iframe-container {
+            min-height: 500px;
+            padding: 20px;
+            background: #fafafa;
+            border: 2px solid #cc6600;
+            border-radius: 4px;
+        }
+        .editor-iframe {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .debug-info {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        button {
+            background: #cc6600;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #b85c00;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.cross-origin {
+            background: #ff9800;
+            color: white;
+        }
+        .navigation {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .navigation a {
+            color: #cc6600;
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: 500;
+        }
+        .navigation a:hover {
+            text-decoration: underline;
+        }
+        .port-selector {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f0f4ff;
+            border-radius: 4px;
+            border-left: 4px solid #2196f3;
+        }
+        .port-selector select {
+            padding: 8px;
+            margin: 0 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .setup-instructions {
+            background: #e8f5e8;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navigation">
+        <a href="index.html">← Home</a>
+        <a href="ckeditor-shadow-dom.html">CKEditor Shadow DOM</a>
+        <a href="jodit-shadow-dom.html">Jodit Shadow DOM</a>
+        <a href="ckeditor-iframe.html">CKEditor iframe</a>
+        <a href="ckeditor-iframe-cross-origin.html">CKEditor Cross-Origin iframe</a>
+    </div>
+
+    <div class="container">
+        <h1>🌐 CKEditor in Cross-Origin iframe - POC Test Page</h1>
+        
+        <div class="info-box">
+            <strong>Purpose:</strong> This page demonstrates CKEditor 5 running inside a cross-origin iframe for testing Low Code Automation compatibility.
+            <br><br>
+            <strong>Test Focus:</strong> Element selection, event recording, and playback across different origins with security restrictions.
+            <br><br>
+            <strong>iframe Context:</strong> <span class="status cross-origin">Cross-Origin iframe</span>
+        </div>
+
+        <div class="warning-box">
+            <strong>⚠️ Security Notice:</strong> Cross-origin iframes have strict security restrictions. Direct content access is blocked by the Same-Origin Policy. Communication must happen via postMessage API.
+        </div>
+
+        <div class="setup-instructions">
+            <h3>🚀 Setup Instructions for Cross-Origin Testing</h3>
+            <ol>
+                <li>Start a second HTTP server on a different port:
+                    <br><code>python3 -m http.server 8081</code> (or any different port)
+                </li>
+                <li>Select the port below to load the iframe from a different origin</li>
+                <li>This simulates a real cross-origin scenario (different port = different origin)</li>
+            </ol>
+        </div>
+
+        <div class="port-selector">
+            <strong>Cross-Origin Server:</strong>
+            <select id="port-selector" onchange="updateIframeSrc()">
+                <option value="">Select a port for cross-origin testing...</option>
+                <option value="8081">http://localhost:8081</option>
+                <option value="8082">http://localhost:8082</option>
+                <option value="3000">http://localhost:3000</option>
+                <option value="3001">http://localhost:3001</option>
+                <option value="5000">http://localhost:5000</option>
+                <option value="9000">http://localhost:9000</option>
+            </select>
+            <button onclick="loadCrossOriginIframe()">Load Cross-Origin iframe</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📝 CKEditor in Cross-Origin iframe</h2>
+            <p>The editor below will be loaded from a different origin (different port). This tests LCA functionality across origin boundaries.</p>
+            
+            <div class="iframe-container">
+                <iframe 
+                    id="editor-iframe" 
+                    class="editor-iframe" 
+                    title="CKEditor Cross-Origin iframe"
+                    style="display: none;">
+                </iframe>
+                <div id="iframe-placeholder" style="display: flex; align-items: center; justify-content: center; height: 400px; color: #666; font-size: 18px;">
+                    Select a port above to load cross-origin iframe
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button onclick="sendMessageToIframe('get-content')" id="get-content-btn" disabled>Get iframe Content (postMessage)</button>
+                <button onclick="sendMessageToIframe('set-content')" id="set-content-btn" disabled>Set iframe Content (postMessage)</button>
+                <button onclick="sendMessageToIframe('focus-editor')" id="focus-btn" disabled>Focus iframe Editor (postMessage)</button>
+                <button onclick="clearDebugInfo()">Clear Debug</button>
+            </div>
+
+            <div class="debug-info" id="debug-info">
+                <strong>Debug Information:</strong><br>
+                iframe loaded: <span id="iframe-status">Not loaded</span><br>
+                Origin: <span id="origin-status">Same origin</span><br>
+                Communication: <span id="communication-status">Not tested</span><br>
+                Direct access: <span id="access-status">Not attempted</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 LCA Test Instructions</h2>
+            <ol>
+                <li><strong>Setup:</strong> Start a second HTTP server on a different port first</li>
+                <li><strong>Load iframe:</strong> Select a port and load the cross-origin iframe</li>
+                <li><strong>Element Selection:</strong> Try to select elements inside the cross-origin iframe</li>
+                <li><strong>Text Input:</strong> Test typing text into the CKEditor within the cross-origin iframe</li>
+                <li><strong>Toolbar Actions:</strong> Test clicking toolbar buttons inside the cross-origin iframe</li>
+                <li><strong>Content Communication:</strong> Use postMessage buttons to test cross-origin communication</li>
+                <li><strong>Security Restrictions:</strong> Observe how cross-origin policies affect automation</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Technical Details</h2>
+            <ul>
+                <li><strong>iframe Source:</strong> Cross-origin (different port/domain)</li>
+                <li><strong>Security Context:</strong> Restricted access due to Same-Origin Policy</li>
+                <li><strong>Communication:</strong> postMessage API only</li>
+                <li><strong>Editor Version:</strong> CKEditor 5.41.0</li>
+                <li><strong>Expected Behavior:</strong> LCA may need special handling for cross-origin iframes</li>
+                <li><strong>CORS Considerations:</strong> Content access blocked, only messaging allowed</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let currentOrigin = window.location.origin;
+        let iframeOrigin = null;
+
+        function updateIframeSrc() {
+            const select = document.getElementById('port-selector');
+            const selectedPort = select.value;
+            
+            if (selectedPort) {
+                iframeOrigin = `http://localhost:${selectedPort}`;
+                updateDebugInfo(`Selected origin: ${iframeOrigin}`);
+            }
+        }
+
+        function loadCrossOriginIframe() {
+            const select = document.getElementById('port-selector');
+            const selectedPort = select.value;
+            
+            if (!selectedPort) {
+                alert('Please select a port first');
+                return;
+            }
+            
+            const iframe = document.getElementById('editor-iframe');
+            const placeholder = document.getElementById('iframe-placeholder');
+            
+            iframeOrigin = `http://localhost:${selectedPort}`;
+            iframe.src = `${iframeOrigin}/ckeditor-iframe-content.html`;
+            
+            // Show iframe, hide placeholder
+            iframe.style.display = 'block';
+            placeholder.style.display = 'none';
+            
+            // Update status
+            document.getElementById('iframe-status').textContent = 'Loading...';
+            document.getElementById('origin-status').textContent = `Cross-origin (${iframeOrigin})`;
+            
+            updateDebugInfo(`Loading iframe from: ${iframeOrigin}`);
+        }
+
+        // Wait for iframe to load
+        document.getElementById('editor-iframe').addEventListener('load', function() {
+            document.getElementById('iframe-status').textContent = 'Loaded ✓';
+            
+            // Enable buttons
+            document.getElementById('get-content-btn').disabled = false;
+            document.getElementById('set-content-btn').disabled = false;
+            document.getElementById('focus-btn').disabled = false;
+            
+            // Try to access the iframe content (this should fail for cross-origin)
+            try {
+                const iframeWindow = this.contentWindow;
+                const iframeDoc = this.contentDocument || iframeWindow.document;
+                
+                if (iframeDoc && iframeOrigin !== currentOrigin) {
+                    // This shouldn't happen for cross-origin
+                    document.getElementById('access-status').textContent = 'Unexpected access ⚠️';
+                    updateDebugInfo('WARNING: Cross-origin iframe content is accessible (this should not happen)');
+                } else if (iframeOrigin === currentOrigin) {
+                    document.getElementById('access-status').textContent = 'Same-origin access ✓';
+                    updateDebugInfo('Same-origin iframe detected');
+                } else {
+                    document.getElementById('access-status').textContent = 'Blocked (expected) ✓';
+                    updateDebugInfo('Cross-origin access properly blocked');
+                }
+            } catch (error) {
+                document.getElementById('access-status').textContent = 'Blocked (expected) ✓';
+                updateDebugInfo('Cross-origin access blocked: ' + error.message);
+            }
+        });
+
+        function sendMessageToIframe(action) {
+            const iframe = document.getElementById('editor-iframe');
+            
+            if (!iframe.src) {
+                updateDebugInfo('No iframe loaded');
+                return;
+            }
+            
+            const targetOrigin = iframeOrigin || '*';
+            
+            try {
+                switch (action) {
+                    case 'get-content':
+                        iframe.contentWindow.postMessage('get-content', targetOrigin);
+                        updateDebugInfo('Sent get-content message to iframe');
+                        break;
+                    case 'set-content':
+                        const sampleContent = `<p><strong>Cross-origin content</strong> set from parent at ${new Date().toLocaleTimeString()}</p>`;
+                        iframe.contentWindow.postMessage({
+                            action: 'set-content',
+                            content: sampleContent
+                        }, targetOrigin);
+                        updateDebugInfo('Sent set-content message to iframe');
+                        break;
+                    case 'focus-editor':
+                        iframe.contentWindow.postMessage('focus-editor', targetOrigin);
+                        updateDebugInfo('Sent focus-editor message to iframe');
+                        break;
+                }
+            } catch (error) {
+                updateDebugInfo('Error sending message: ' + error.message);
+            }
+        }
+
+        function updateDebugInfo(message) {
+            const debugInfo = document.getElementById('debug-info');
+            const timestamp = new Date().toLocaleTimeString();
+            debugInfo.innerHTML += '<br>' + timestamp + ': ' + message;
+            debugInfo.scrollTop = debugInfo.scrollHeight;
+        }
+
+        function clearDebugInfo() {
+            const debugInfo = document.getElementById('debug-info');
+            debugInfo.innerHTML = `
+                <strong>Debug Information:</strong><br>
+                iframe loaded: <span id="iframe-status">Not loaded</span><br>
+                Origin: <span id="origin-status">Same origin</span><br>
+                Communication: <span id="communication-status">Not tested</span><br>
+                Direct access: <span id="access-status">Not attempted</span>
+            `;
+        }
+
+        // Listen for messages from iframe
+        window.addEventListener('message', function(event) {
+            // Verify origin for security
+            if (iframeOrigin && event.origin !== iframeOrigin) {
+                updateDebugInfo(`Ignored message from unexpected origin: ${event.origin}`);
+                return;
+            }
+            
+            updateDebugInfo(`Received message from iframe: ${JSON.stringify(event.data)}`);
+            
+            if (event.data === 'ckeditor-ready') {
+                document.getElementById('communication-status').textContent = 'Connected ✓';
+                updateDebugInfo('CKEditor ready in cross-origin iframe');
+            } else if (event.data && event.data.type === 'content-response') {
+                const content = event.data.content;
+                updateDebugInfo('Content retrieved: ' + content.substring(0, 100) + (content.length > 100 ? '...' : ''));
+            } else if (typeof event.data === 'string' && event.data.startsWith('ckeditor-')) {
+                updateDebugInfo('Editor event: ' + event.data);
+            }
+        });
+
+        // Show current origin for reference
+        updateDebugInfo(`Current page origin: ${currentOrigin}`);
+    </script>
+</body>
+</html>

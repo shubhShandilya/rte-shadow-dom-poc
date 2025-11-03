@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKEditor iframe Content</title>
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.0.0/classic/ckeditor.js"></script>
+    <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/41.0.0/classic/ckeditor.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #fff;
+        }
+        .editor-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .header {
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .header h3 {
+            margin: 0;
+            color: #333;
+        }
+        .header p {
+            margin: 5px 0 0 0;
+            color: #666;
+            font-size: 14px;
+        }
+        #editor {
+            min-height: 300px;
+        }
+        .status-bar {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div class="header">
+            <h3>🖼️ CKEditor in iframe</h3>
+            <p>This CKEditor instance is running inside an iframe (same-origin)</p>
+        </div>
+        
+        <div id="editor">
+            <h2>Welcome to CKEditor in iframe!</h2>
+            <p>This is a <strong>CKEditor 5</strong> instance running inside an iframe. You can:</p>
+            <ul>
+                <li>Type and format text</li>
+                <li>Use the toolbar buttons</li>
+                <li>Test automation tools</li>
+                <li>Interact with the parent window</li>
+            </ul>
+            <p>Try selecting text and applying formatting to test LCA functionality!</p>
+        </div>
+        
+        <div class="status-bar">
+            Status: <span id="status">Loading...</span> | 
+            Frame: <span id="frame-info">iframe</span> | 
+            Origin: <span id="origin-info">same-origin</span>
+        </div>
+    </div>
+
+    <script>
+        let editorInstance = null;
+
+        // Initialize CKEditor
+        ClassicEditor.create(document.querySelector('#editor'), {
+            toolbar: [
+                'heading',
+                '|',
+                'bold',
+                'italic',
+                'underline',
+                '|',
+                'link',
+                'bulletedList',
+                'numberedList',
+                '|',
+                'outdent',
+                'indent',
+                '|',
+                'blockQuote',
+                'insertTable',
+                '|',
+                'undo',
+                'redo'
+            ]
+        })
+        .then(editor => {
+            editorInstance = editor;
+            window.editorInstance = editor; // Expose to parent window
+            
+            document.getElementById('status').textContent = 'Ready ✓';
+            
+            // Notify parent window that editor is ready
+            if (window.parent !== window) {
+                window.parent.postMessage('ckeditor-ready', '*');
+            }
+            
+            // Log editor events for debugging
+            editor.model.document.on('change:data', () => {
+                if (window.parent !== window) {
+                    window.parent.postMessage('ckeditor-content-changed', '*');
+                }
+            });
+            
+            // Focus event
+            editor.editing.view.document.on('focus', () => {
+                if (window.parent !== window) {
+                    window.parent.postMessage('ckeditor-focused', '*');
+                }
+            });
+            
+            // Blur event
+            editor.editing.view.document.on('blur', () => {
+                if (window.parent !== window) {
+                    window.parent.postMessage('ckeditor-blurred', '*');
+                }
+            });
+            
+            console.log('CKEditor initialized in iframe');
+        })
+        .catch(error => {
+            console.error('Error initializing CKEditor:', error);
+            document.getElementById('status').textContent = 'Error ✗';
+        });
+
+        // Update frame info
+        document.getElementById('frame-info').textContent = window.self === window.top ? 'main-window' : 'iframe';
+        document.getElementById('origin-info').textContent = window.location.origin;
+
+        // Listen for messages from parent
+        window.addEventListener('message', function(event) {
+            console.log('iframe received message:', event.data);
+            
+            if (event.data === 'get-content' && editorInstance) {
+                event.source.postMessage({
+                    type: 'content-response',
+                    content: editorInstance.getData()
+                }, event.origin);
+            }
+            
+            if (event.data === 'focus-editor' && editorInstance) {
+                editorInstance.editing.view.focus();
+            }
+        });
+
+        // Expose useful functions globally for parent access
+        window.getEditorContent = function() {
+            return editorInstance ? editorInstance.getData() : '';
+        };
+
+        window.setEditorContent = function(content) {
+            if (editorInstance) {
+                editorInstance.setData(content);
+                return true;
+            }
+            return false;
+        };
+
+        window.focusEditor = function() {
+            if (editorInstance) {
+                editorInstance.editing.view.focus();
+                return true;
+            }
+            return false;
+        };
+    </script>
+</body>
+</html>

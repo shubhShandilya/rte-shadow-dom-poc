@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKEditor in iframe - POC Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #0066cc;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #0066cc;
+            margin-top: 30px;
+        }
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+        }
+        .iframe-container {
+            min-height: 500px;
+            padding: 20px;
+            background: #fafafa;
+            border: 2px solid #0066cc;
+            border-radius: 4px;
+        }
+        .editor-iframe {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .debug-info {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        button {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #0052a3;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.iframe {
+            background: #4caf50;
+            color: white;
+        }
+        .navigation {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .navigation a {
+            color: #0066cc;
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: 500;
+        }
+        .navigation a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="navigation">
+        <a href="index.html">← Home</a>
+        <a href="ckeditor-shadow-dom.html">CKEditor Shadow DOM</a>
+        <a href="jodit-shadow-dom.html">Jodit Shadow DOM</a>
+        <a href="ckeditor-iframe.html">CKEditor iframe</a>
+        <a href="ckeditor-iframe-cross-origin.html">CKEditor Cross-Origin iframe</a>
+    </div>
+
+    <div class="container">
+        <h1>🖼️ CKEditor in iframe - POC Test Page</h1>
+        
+        <div class="info-box">
+            <strong>Purpose:</strong> This page demonstrates CKEditor 5 running inside an iframe (same-origin) for testing Low Code Automation compatibility.
+            <br><br>
+            <strong>Test Focus:</strong> Element selection, event recording, and playback within iframe boundaries.
+            <br><br>
+            <strong>iframe Context:</strong> <span class="status iframe">Same-Origin iframe</span>
+        </div>
+
+        <div class="test-section">
+            <h2>📝 CKEditor in iframe</h2>
+            <p>The editor below is loaded in an iframe from the same origin. This tests LCA functionality across iframe boundaries.</p>
+            
+            <div class="iframe-container">
+                <iframe 
+                    id="editor-iframe" 
+                    class="editor-iframe" 
+                    src="ckeditor-iframe-content.html"
+                    title="CKEditor iframe">
+                </iframe>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button onclick="getIframeContent()">Get iframe Content</button>
+                <button onclick="setIframeContent()">Set iframe Content</button>
+                <button onclick="focusIframeEditor()">Focus iframe Editor</button>
+                <button onclick="clearDebugInfo()">Clear Debug</button>
+            </div>
+
+            <div class="debug-info" id="debug-info">
+                <strong>Debug Information:</strong><br>
+                iframe loaded: <span id="iframe-status">Loading...</span><br>
+                Content communication: <span id="communication-status">Not tested</span><br>
+                Cross-frame access: <span id="access-status">Not tested</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 LCA Test Instructions</h2>
+            <ol>
+                <li><strong>Element Selection:</strong> Try to select elements inside the iframe using your automation tool</li>
+                <li><strong>Text Input:</strong> Test typing text into the CKEditor within the iframe</li>
+                <li><strong>Toolbar Actions:</strong> Test clicking toolbar buttons (Bold, Italic, etc.) inside the iframe</li>
+                <li><strong>Content Retrieval:</strong> Use the "Get iframe Content" button to test content access</li>
+                <li><strong>Focus Management:</strong> Test focusing the editor using the "Focus iframe Editor" button</li>
+                <li><strong>Event Recording:</strong> Record user interactions and verify they work in playback</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Technical Details</h2>
+            <ul>
+                <li><strong>iframe Source:</strong> Same-origin (./ckeditor-iframe-content.html)</li>
+                <li><strong>Security Context:</strong> Full access to iframe content (same-origin)</li>
+                <li><strong>Communication:</strong> Direct access via contentWindow</li>
+                <li><strong>Editor Version:</strong> CKEditor 5.41.0</li>
+                <li><strong>Expected Behavior:</strong> LCA should work normally with iframe traversal</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let editorInstance = null;
+
+        // Wait for iframe to load
+        document.getElementById('editor-iframe').addEventListener('load', function() {
+            document.getElementById('iframe-status').textContent = 'Loaded ✓';
+            
+            // Try to access the iframe content
+            try {
+                const iframeWindow = this.contentWindow;
+                const iframeDoc = this.contentDocument || iframeWindow.document;
+                
+                if (iframeDoc) {
+                    document.getElementById('access-status').textContent = 'Accessible ✓';
+                    
+                    // Wait for CKEditor to be ready in iframe
+                    const checkEditor = setInterval(() => {
+                        if (iframeWindow.editorInstance) {
+                            editorInstance = iframeWindow.editorInstance;
+                            document.getElementById('communication-status').textContent = 'Connected ✓';
+                            clearInterval(checkEditor);
+                        }
+                    }, 100);
+                } else {
+                    document.getElementById('access-status').textContent = 'Blocked ✗';
+                }
+            } catch (error) {
+                document.getElementById('access-status').textContent = 'Error: ' + error.message;
+            }
+        });
+
+        function getIframeContent() {
+            if (editorInstance) {
+                const content = editorInstance.getData();
+                updateDebugInfo('Content retrieved: ' + content.substring(0, 100) + (content.length > 100 ? '...' : ''));
+            } else {
+                updateDebugInfo('Editor not accessible or not ready');
+            }
+        }
+
+        function setIframeContent() {
+            if (editorInstance) {
+                const sampleContent = '<p><strong>Sample content</strong> set from parent window at ' + new Date().toLocaleTimeString() + '</p>';
+                editorInstance.setData(sampleContent);
+                updateDebugInfo('Content set successfully');
+            } else {
+                updateDebugInfo('Editor not accessible or not ready');
+            }
+        }
+
+        function focusIframeEditor() {
+            if (editorInstance) {
+                editorInstance.editing.view.focus();
+                updateDebugInfo('Editor focused');
+            } else {
+                updateDebugInfo('Editor not accessible or not ready');
+            }
+        }
+
+        function updateDebugInfo(message) {
+            const debugInfo = document.getElementById('debug-info');
+            debugInfo.innerHTML += '<br>' + new Date().toLocaleTimeString() + ': ' + message;
+            debugInfo.scrollTop = debugInfo.scrollHeight;
+        }
+
+        function clearDebugInfo() {
+            const debugInfo = document.getElementById('debug-info');
+            debugInfo.innerHTML = `
+                <strong>Debug Information:</strong><br>
+                iframe loaded: <span id="iframe-status">Loading...</span><br>
+                Content communication: <span id="communication-status">Not tested</span><br>
+                Cross-frame access: <span id="access-status">Not tested</span>
+            `;
+        }
+
+        // Log iframe interactions for debugging
+        window.addEventListener('message', function(event) {
+            if (event.source === document.getElementById('editor-iframe').contentWindow) {
+                updateDebugInfo('Message from iframe: ' + event.data);
+            }
+        });
+    </script>
+</body>
+</html>

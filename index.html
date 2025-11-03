@@ -64,12 +64,10 @@
         
         .test-links {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .test-card {
+            margin: 30px 0;
+        }        .test-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 30px;
             border-radius: 15px;
@@ -199,26 +197,40 @@
         
         <div class="test-links">
             <div class="test-card">
-                <h2>📝 CKEditor</h2>
+                <h2>📝 CKEditor Shadow DOM</h2>
                 <p>CKEditor 5 Classic with Shadow DOM implementation</p>
                 <a href="ckeditor-shadow-dom.html">Open Test Page</a>
             </div>
             
             <div class="test-card">
-                <h2>✏️ Jodit Editor</h2>
+                <h2>✏️ Jodit Shadow DOM</h2>
                 <p>Jodit Editor with Shadow DOM implementation</p>
                 <a href="jodit-shadow-dom.html">Open Test Page</a>
+            </div>
+
+            <div class="test-card">
+                <h2>🖼️ CKEditor iframe</h2>
+                <p>CKEditor 5 running inside same-origin iframe</p>
+                <a href="ckeditor-iframe.html">Open Test Page</a>
+            </div>
+            
+            <div class="test-card">
+                <h2>🌐 CKEditor Cross-Origin</h2>
+                <p>CKEditor 5 in cross-origin iframe (different port)</p>
+                <a href="ckeditor-iframe-cross-origin.html">Open Test Page</a>
             </div>
         </div>
         
         <div class="features">
             <h3>What's Included in Each Test Page</h3>
             <ul>
-                <li>Editor in Shadow DOM (open mode)</li>
-                <li>Regular DOM editor for comparison</li>
+                <li>Shadow DOM implementations (CKEditor & Jodit)</li>
+                <li>iframe implementations (same-origin & cross-origin)</li>
+                <li>Regular DOM editors for comparison</li>
                 <li>Multiple editor instances</li>
                 <li>Built-in verification tools</li>
-                <li>Shadow DOM inspection utilities</li>
+                <li>Cross-frame communication examples</li>
+                <li>Security boundary testing</li>
             </ul>
         </div>
         

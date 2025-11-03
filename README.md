@@ -14,12 +14,17 @@ Access the hosted test pages directly:
 - **[Home Page](https://shubhshandilya.github.io/rte-shadow-dom-poc/)** - Main navigation page
 - **[CKEditor Test](https://shubhshandilya.github.io/rte-shadow-dom-poc/ckeditor-shadow-dom.html)** - CKEditor 5 with Shadow DOM
 - **[Jodit Editor Test](https://shubhshandilya.github.io/rte-shadow-dom-poc/jodit-shadow-dom.html)** - Jodit Editor with Shadow DOM
+- **[CKEditor iframe Test](https://shubhshandilya.github.io/rte-shadow-dom-poc/ckeditor-iframe.html)** - CKEditor 5 in same-origin iframe
+- **[CKEditor Cross-Origin Test](https://shubhshandilya.github.io/rte-shadow-dom-poc/ckeditor-iframe-cross-origin.html)** - CKEditor 5 in cross-origin iframe
 
 ## 📁 Files
 
 - **`index.html`** - Landing page with navigation to all tests
 - **`ckeditor-shadow-dom.html`** - CKEditor 5 test page with Shadow DOM implementation
 - **`jodit-shadow-dom.html`** - Jodit Editor test page with Shadow DOM implementation
+- **`ckeditor-iframe.html`** - CKEditor 5 in same-origin iframe implementation
+- **`ckeditor-iframe-content.html`** - iframe content for CKEditor tests
+- **`ckeditor-iframe-cross-origin.html`** - CKEditor 5 in cross-origin iframe implementation
 - **`README.md`** - This documentation
 
 ## 🚀 Local Development
@@ -71,6 +76,42 @@ Each test page includes:
 - Two separate editors in different shadow roots
 - Tests unique element identification
 - Verifies LCA can distinguish between similar elements in different shadow contexts
+
+### 4. **iframe Editor (Same-Origin)**
+- Editor loaded inside an iframe from the same origin
+- Tests LCA's ability to traverse iframe boundaries
+- Verifies cross-frame element selection and interaction
+- Full access to iframe content (same-origin policy allows)
+
+### 5. **iframe Editor (Cross-Origin)**
+- Editor loaded inside an iframe from a different origin (different port)
+- Tests LCA behavior with cross-origin restrictions
+- Limited access due to Same-Origin Policy
+- Communication only via postMessage API
+
+## 🌐 iframe Testing Setup
+
+For cross-origin iframe testing, you need to run multiple HTTP servers:
+
+### Step 1: Start Primary Server
+```bash
+# Terminal 1 - Primary server (port 8080)
+cd /path/to/project
+python3 -m http.server 8080
+```
+
+### Step 2: Start Secondary Server
+```bash
+# Terminal 2 - Secondary server (different port)
+cd /path/to/project
+python3 -m http.server 8081
+```
+
+### Step 3: Test Cross-Origin iframe
+1. Open http://localhost:8080/ckeditor-iframe-cross-origin.html
+2. Select port 8081 from the dropdown
+3. Load the cross-origin iframe
+4. Test LCA functionality across origin boundaries
 
 ## 🔍 Testing with LCA
 
