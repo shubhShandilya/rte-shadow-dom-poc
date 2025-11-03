@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jodit Editor in Shadow DOM - POC Test Page</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jodit@4/es2021/jodit.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/jodit@4/es2021/jodit.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #ff6b35;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #ff6b35;
+            margin-top: 30px;
+        }
+        .info-box {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+        }
+        .shadow-host {
+            min-height: 400px;
+            padding: 20px;
+            background: #fafafa;
+            border: 2px solid #ff6b35;
+            border-radius: 4px;
+        }
+        .debug-info {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        button {
+            background: #ff6b35;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #e55a2b;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.shadow {
+            background: #4caf50;
+            color: white;
+        }
+        .status.normal {
+            background: #ff9800;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Jodit Editor in Shadow DOM - POC Test Page</h1>
+        
+        <div class="info-box">
+            <strong>Purpose:</strong> This page demonstrates Jodit Editor running inside a Shadow DOM for testing Low Code Automation compatibility.
+            <br><br>
+            <strong>Test Focus:</strong> Element selection, event recording, and playback within Shadow DOM boundaries.
+        </div>
+
+        <div class="test-section">
+            <h2>Test 1: Jodit Editor in Shadow DOM <span class="status shadow">✓ Shadow DOM</span></h2>
+            <p>This editor is wrapped in a Web Component with Shadow DOM (open mode)</p>
+            <jodit-shadow-wrapper id="shadow-editor-1"></jodit-shadow-wrapper>
+            
+            <div class="debug-info">
+                <strong>Debug Info:</strong><br>
+                Element: &lt;jodit-shadow-wrapper&gt;<br>
+                Shadow Root: Open<br>
+                Selector Path: jodit-shadow-wrapper → #shadow-root → .jodit-container
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test 2: Regular Jodit Editor (No Shadow DOM) <span class="status normal">⚠ Regular DOM</span></h2>
+            <p>This is a standard Jodit Editor for comparison</p>
+            <textarea id="regular-editor-1"></textarea>
+            
+            <div class="debug-info">
+                <strong>Debug Info:</strong><br>
+                Element: &lt;textarea id="regular-editor-1"&gt;<br>
+                Shadow Root: None<br>
+                Selector Path: #regular-editor-1 → .jodit-container
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test 3: Multiple Jodit Editors in Shadow DOM <span class="status shadow">✓ Shadow DOM</span></h2>
+            <p>Two separate editors in different shadow roots to test unique identification</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <h3>Editor A</h3>
+                    <jodit-shadow-wrapper id="shadow-editor-2"></jodit-shadow-wrapper>
+                </div>
+                <div>
+                    <h3>Editor B</h3>
+                    <jodit-shadow-wrapper id="shadow-editor-3"></jodit-shadow-wrapper>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Verification Tools</h2>
+            <p>Use these buttons to verify Shadow DOM implementation:</p>
+            <button onclick="checkShadowDOM()">Check Shadow DOM Status</button>
+            <button onclick="inspectElements()">Inspect Elements</button>
+            <button onclick="getEditorContent()">Get All Editor Content</button>
+            <button onclick="testToolbarInteraction()">Test Toolbar Detection</button>
+            <div id="verification-output" style="margin-top: 15px; padding: 15px; background: #f5f5f5; border-radius: 4px; display: none;">
+                <pre id="verification-result"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Web Component that wraps Jodit Editor in Shadow DOM
+        class JoditShadowWrapper extends HTMLElement {
+            constructor() {
+                super();
+                // Create shadow root (open mode so it can be inspected)
+                this.attachShadow({ mode: 'open' });
+            }
+
+            connectedCallback() {
+                // Create container for Jodit Editor inside shadow root
+                const textarea = document.createElement('textarea');
+                textarea.id = 'editor-textarea';
+                textarea.placeholder = 'Start typing in Shadow DOM editor...';
+                
+                // Add Jodit styles to shadow DOM
+                const linkElem = document.createElement('link');
+                linkElem.setAttribute('rel', 'stylesheet');
+                linkElem.setAttribute('href', 'https://cdn.jsdelivr.net/npm/jodit@4/es2021/jodit.min.css');
+                
+                const style = document.createElement('style');
+                style.textContent = `
+                    #editor-textarea {
+                        width: 100%;
+                        min-height: 300px;
+                        display: none; /* Hidden once Jodit takes over */
+                    }
+                `;
+                
+                this.shadowRoot.appendChild(linkElem);
+                this.shadowRoot.appendChild(style);
+                this.shadowRoot.appendChild(textarea);
+
+                // Wait for styles to load, then initialize Jodit
+                linkElem.onload = () => {
+                    this.initializeJodit(textarea);
+                };
+            }
+
+            initializeJodit(textarea) {
+                try {
+                    this.editor = Jodit.make(textarea, {
+                        height: 350,
+                        placeholder: 'Start typing in Shadow DOM Jodit editor...',
+                        buttons: [
+                            'bold', 'italic', 'underline', 'strikethrough', '|',
+                            'ul', 'ol', '|',
+                            'font', 'fontsize', 'brush', '|',
+                            'align', 'undo', 'redo', '|',
+                            'link', 'image', 'table', '|',
+                            'source'
+                        ],
+                        toolbarAdaptive: false
+                    });
+                    console.log('✅ Jodit Editor initialized in Shadow DOM:', this.id);
+                } catch (error) {
+                    console.error('Error initializing Jodit in Shadow DOM:', error);
+                }
+            }
+
+            getContent() {
+                return this.editor ? this.editor.value : '';
+            }
+        }
+
+        // Register the custom element
+        customElements.define('jodit-shadow-wrapper', JoditShadowWrapper);
+
+        // Initialize regular Jodit Editor (no shadow DOM)
+        let regularEditor;
+        const regularTextarea = document.querySelector('#regular-editor-1');
+        
+        // Wait for Jodit to be available
+        if (typeof Jodit !== 'undefined') {
+            regularEditor = Jodit.make(regularTextarea, {
+                height: 350,
+                placeholder: 'Start typing in regular Jodit editor...',
+                buttons: [
+                    'bold', 'italic', 'underline', 'strikethrough', '|',
+                    'ul', 'ol', '|',
+                    'font', 'fontsize', 'brush', '|',
+                    'align', 'undo', 'redo', '|',
+                    'link', 'image', 'table', '|',
+                    'source'
+                ],
+                toolbarAdaptive: false
+            });
+            console.log('✅ Regular Jodit Editor initialized');
+        }
+
+        // Verification functions
+        function checkShadowDOM() {
+            const output = document.getElementById('verification-output');
+            const result = document.getElementById('verification-result');
+            
+            const shadowWrappers = document.querySelectorAll('jodit-shadow-wrapper');
+            let info = 'Shadow DOM Status Check:\n\n';
+            
+            shadowWrappers.forEach((wrapper, index) => {
+                info += `Editor ${index + 1} (${wrapper.id}):\n`;
+                info += `  - Has Shadow Root: ${!!wrapper.shadowRoot}\n`;
+                info += `  - Shadow Mode: ${wrapper.shadowRoot ? 'open' : 'N/A'}\n`;
+                info += `  - Shadow Children: ${wrapper.shadowRoot ? wrapper.shadowRoot.children.length : 0}\n`;
+                
+                if (wrapper.shadowRoot) {
+                    const joditContainer = wrapper.shadowRoot.querySelector('.jodit-container');
+                    info += `  - Jodit Container Found: ${!!joditContainer}\n`;
+                    
+                    const toolbar = wrapper.shadowRoot.querySelector('.jodit-toolbar');
+                    info += `  - Jodit Toolbar Found: ${!!toolbar}\n`;
+                }
+                info += '\n';
+            });
+            
+            result.textContent = info;
+            output.style.display = 'block';
+        }
+
+        function inspectElements() {
+            const output = document.getElementById('verification-output');
+            const result = document.getElementById('verification-result');
+            
+            let info = 'Element Inspection:\n\n';
+            
+            // Check shadow editors
+            const shadowWrappers = document.querySelectorAll('jodit-shadow-wrapper');
+            shadowWrappers.forEach((wrapper, index) => {
+                info += `Shadow Editor ${index + 1}:\n`;
+                info += `  Selector: ${wrapper.tagName.toLowerCase()}#${wrapper.id}\n`;
+                
+                if (wrapper.shadowRoot) {
+                    const buttons = wrapper.shadowRoot.querySelectorAll('button');
+                    info += `  Buttons in Shadow DOM: ${buttons.length}\n`;
+                    
+                    if (buttons.length > 0) {
+                        info += `  First 3 buttons:\n`;
+                        for (let i = 0; i < Math.min(3, buttons.length); i++) {
+                            const btn = buttons[i];
+                            info += `    ${i + 1}. aria-label: ${btn.getAttribute('aria-label') || 'N/A'}, `;
+                            info += `title: ${btn.getAttribute('title') || 'N/A'}\n`;
+                        }
+                    }
+                    
+                    const contentEditable = wrapper.shadowRoot.querySelector('.jodit-wysiwyg');
+                    info += `  Editable area (.jodit-wysiwyg) found: ${!!contentEditable}\n`;
+                    if (contentEditable) {
+                        info += `  Contenteditable: ${contentEditable.getAttribute('contenteditable')}\n`;
+                    }
+                }
+                info += '\n';
+            });
+            
+            // Check regular editor
+            const regularEditorEl = document.querySelector('#regular-editor-1');
+            if (regularEditorEl && regularEditorEl.nextElementSibling) {
+                info += 'Regular Editor:\n';
+                info += `  Original Selector: #regular-editor-1\n`;
+                const joditContainer = regularEditorEl.nextElementSibling;
+                info += `  Jodit Container found: ${joditContainer.classList.contains('jodit-container')}\n`;
+                
+                if (joditContainer.classList.contains('jodit-container')) {
+                    const buttons = joditContainer.querySelectorAll('button');
+                    info += `  Buttons: ${buttons.length}\n`;
+                    
+                    const wysiwyg = joditContainer.querySelector('.jodit-wysiwyg');
+                    info += `  Editable area found: ${!!wysiwyg}\n`;
+                }
+            }
+            
+            result.textContent = info;
+            output.style.display = 'block';
+        }
+
+        function getEditorContent() {
+            const output = document.getElementById('verification-output');
+            const result = document.getElementById('verification-result');
+            
+            let info = 'Editor Content:\n\n';
+            
+            // Get shadow editor content
+            const shadowWrappers = document.querySelectorAll('jodit-shadow-wrapper');
+            shadowWrappers.forEach((wrapper, index) => {
+                const content = wrapper.getContent();
+                info += `Shadow Editor ${index + 1} (${wrapper.id}):\n`;
+                info += content || '  (empty)\n';
+                info += '\n---\n\n';
+            });
+            
+            // Get regular editor content
+            if (regularEditor) {
+                info += 'Regular Editor:\n';
+                info += regularEditor.value || '  (empty)\n';
+            }
+            
+            result.textContent = info;
+            output.style.display = 'block';
+        }
+
+        function testToolbarInteraction() {
+            const output = document.getElementById('verification-output');
+            const result = document.getElementById('verification-result');
+            
+            let info = 'Toolbar Interaction Test:\n\n';
+            info += 'This function demonstrates how to programmatically interact with\n';
+            info += 'toolbar buttons inside Shadow DOM.\n\n';
+            
+            const firstWrapper = document.querySelector('jodit-shadow-wrapper#shadow-editor-1');
+            if (firstWrapper && firstWrapper.shadowRoot) {
+                const boldButton = Array.from(firstWrapper.shadowRoot.querySelectorAll('button'))
+                    .find(btn => {
+                        const aria = btn.getAttribute('aria-label') || '';
+                        const title = btn.getAttribute('title') || '';
+                        return aria.includes('Bold') || title.includes('Bold');
+                    });
+                
+                if (boldButton) {
+                    info += '✅ Bold button found in shadow DOM!\n';
+                    info += `   Selector: button[aria-label="${boldButton.getAttribute('aria-label')}"]\n`;
+                    info += `   Can be clicked programmatically: Yes\n`;
+                    info += '\nTry clicking it manually in the first editor to test LCA recording.\n';
+                } else {
+                    info += '❌ Bold button not found. Editor may still be initializing.\n';
+                }
+            } else {
+                info += '❌ Shadow wrapper not found.\n';
+            }
+            
+            result.textContent = info;
+            output.style.display = 'block';
+        }
+
+        // Auto-run initial check after page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                console.log('🎯 Jodit POC Test Page Ready!');
+                console.log('Run checkShadowDOM() in console to verify Shadow DOM setup');
+            }, 2000); // Wait longer for Jodit to initialize
+        });
+    </script>
+</body>
+</html>
