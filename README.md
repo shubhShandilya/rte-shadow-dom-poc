@@ -1,14 +1,28 @@
-# Rich Text Editor POC - Test Pages
+# Rich Text Editor Shadow DOM POC 🧪
 
-This directory contains test pages for verifying Low Code Automation (LCA) support for CKEditor and Jodit Editor within Shadow DOM.
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live-brightgreen)](https://shubhshandilya.github.io/rte-shadow-dom-poc/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+> **Live Demo**: [https://shubhshandilya.github.io/rte-shadow-dom-poc/](https://shubhshandilya.github.io/rte-shadow-dom-poc/)
+
+This project provides comprehensive test pages for verifying Low Code Automation (LCA) support for **CKEditor** and **Jodit Editor** when running inside Shadow DOM. Perfect for testing element selection, event recording, and playback functionality in automation tools.
+
+## 🌐 Live Demo
+
+Access the hosted test pages directly:
+
+- **[Home Page](https://shubhshandilya.github.io/rte-shadow-dom-poc/)** - Main navigation page
+- **[CKEditor Test](https://shubhshandilya.github.io/rte-shadow-dom-poc/ckeditor-shadow-dom.html)** - CKEditor 5 with Shadow DOM
+- **[Jodit Editor Test](https://shubhshandilya.github.io/rte-shadow-dom-poc/jodit-shadow-dom.html)** - Jodit Editor with Shadow DOM
 
 ## 📁 Files
 
+- **`index.html`** - Landing page with navigation to all tests
 - **`ckeditor-shadow-dom.html`** - CKEditor 5 test page with Shadow DOM implementation
 - **`jodit-shadow-dom.html`** - Jodit Editor test page with Shadow DOM implementation
-- **`start-server.sh`** - Shell script to quickly start a local HTTP server
+- **`README.md`** - This documentation
 
-## 🚀 Quick Start
+## 🚀 Local Development
 
 ### Option 1: Using the provided script
 
