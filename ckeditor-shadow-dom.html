@@ -142,7 +142,22 @@
         </div>
 
         <div class="test-section">
-            <h2>🔍 Verification Tools</h2>
+            <h2>� Event Debugging Panel</h2>
+            <p>This panel shows real-time event capture to debug LCA recording issues:</p>
+            <button onclick="clearDebugPanel()">Clear Events</button>
+            <button onclick="toggleDebugPanel()">Toggle Panel</button>
+            <div id="debug-panel-container" style="margin-top: 15px; padding: 15px; background: #f5f5f5; border-radius: 4px; max-height: 300px; overflow-y: auto;">
+                <strong>Recent Events (newest first):</strong>
+                <div style="margin-top: 10px; font-family: monospace; font-size: 11px;">
+                    <div style="padding: 5px; background: #e8f5e9; margin-bottom: 2px;">🟢 Green = Shadow DOM editor events</div>
+                    <div style="padding: 5px; background: #e3f2fd; margin-bottom: 10px;">🔵 Blue = Regular DOM editor events</div>
+                </div>
+                <div id="debug-events"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>�🔍 Verification Tools</h2>
             <p>Use these buttons to verify Shadow DOM implementation:</p>
             <button onclick="checkShadowDOM()">Check Shadow DOM Status</button>
             <button onclick="inspectElements()">Inspect Elements</button>
@@ -275,10 +290,91 @@
                     .then(editor => {
                         this.editor = editor;
                         console.log('✅ CKEditor initialized in Shadow DOM:', this.id);
+                        
+                        // Add debug event listeners to track event firing
+                        this.setupEventDebugging();
                     })
                     .catch(error => {
                         console.error('Error initializing CKEditor in Shadow DOM:', error);
                     });
+            }
+
+            setupEventDebugging() {
+                // Find the contenteditable element
+                const editable = this.shadowRoot.querySelector('.ck-editor__editable');
+                if (!editable) {
+                    console.warn('Could not find contenteditable element for debugging');
+                    return;
+                }
+
+                console.log('🔍 Setting up event debugging for:', this.id);
+                console.log('  contentEditable:', editable.contentEditable);
+                console.log('  tagName:', editable.tagName);
+
+                // Track all relevant events
+                const events = ['input', 'beforeinput', 'keydown', 'keyup', 'textInput', 'compositionstart', 'compositionupdate', 'compositionend'];
+                
+                events.forEach(eventType => {
+                    // Capture phase listener on the contenteditable element
+                    editable.addEventListener(eventType, (e) => {
+                        this.logEvent('EDITABLE', eventType, e);
+                    }, true);
+
+                    // Bubble phase listener
+                    editable.addEventListener(eventType, (e) => {
+                        this.logEvent('EDITABLE-BUBBLE', eventType, e);
+                    }, false);
+                });
+
+                // Also listen on shadow root
+                events.forEach(eventType => {
+                    this.shadowRoot.addEventListener(eventType, (e) => {
+                        this.logEvent('SHADOW-ROOT', eventType, e);
+                    }, true);
+                });
+
+                // Listen for CKEditor's internal model changes
+                this.editor.model.document.on('change:data', () => {
+                    console.log('📝 CKEditor model changed');
+                });
+            }
+
+            logEvent(source, type, event) {
+                const eventInfo = {
+                    source,
+                    type,
+                    target: event.target.tagName,
+                    contentEditable: event.target.contentEditable,
+                    defaultPrevented: event.defaultPrevented,
+                    cancelBubble: event.cancelBubble,
+                    bubbles: event.bubbles,
+                    composed: event.composed
+                };
+
+                if (type.includes('input')) {
+                    eventInfo.data = event.data;
+                    eventInfo.inputType = event.inputType;
+                }
+
+                console.log(`🎯 [${this.id}] ${source} → ${type}:`, eventInfo);
+                
+                // Add to debug panel
+                this.updateDebugPanel(eventInfo);
+            }
+
+            updateDebugPanel(eventInfo) {
+                const debugPanel = document.getElementById('debug-events');
+                if (debugPanel) {
+                    const entry = document.createElement('div');
+                    entry.style.cssText = 'padding: 5px; margin: 2px 0; background: #e8f5e9; border-left: 3px solid #4caf50; font-size: 12px;';
+                    entry.textContent = `${new Date().toLocaleTimeString()}.${new Date().getMilliseconds()} | ${eventInfo.source} → ${eventInfo.type} | bubbles: ${eventInfo.bubbles} | prevented: ${eventInfo.defaultPrevented}`;
+                    debugPanel.insertBefore(entry, debugPanel.firstChild);
+                    
+                    // Keep only last 20 events
+                    while (debugPanel.children.length > 20) {
+                        debugPanel.removeChild(debugPanel.lastChild);
+                    }
+                }
             }
 
             getContent() {
@@ -307,10 +403,103 @@
             .then(editor => {
                 regularEditor = editor;
                 console.log('✅ Regular CKEditor initialized');
+                
+                // Add same debugging for regular editor
+                setupRegularEditorDebugging(editor);
             })
             .catch(error => {
                 console.error('Error initializing regular CKEditor:', error);
             });
+
+        // Setup debugging for regular editor (same logic as shadow DOM version)
+        function setupRegularEditorDebugging(editor) {
+            const editable = document.querySelector('#regular-editor-1 .ck-editor__editable');
+            if (!editable) {
+                console.warn('Could not find regular contenteditable element for debugging');
+                return;
+            }
+
+            console.log('🔍 Setting up event debugging for regular editor');
+            console.log('  contentEditable:', editable.contentEditable);
+            console.log('  tagName:', editable.tagName);
+
+            const events = ['input', 'beforeinput', 'keydown', 'keyup', 'textInput', 'compositionstart', 'compositionupdate', 'compositionend'];
+            
+            events.forEach(eventType => {
+                // Capture phase
+                editable.addEventListener(eventType, (e) => {
+                    logRegularEvent('REGULAR-EDITABLE', eventType, e);
+                }, true);
+
+                // Bubble phase
+                editable.addEventListener(eventType, (e) => {
+                    logRegularEvent('REGULAR-BUBBLE', eventType, e);
+                }, false);
+            });
+
+            // Listen on document level too
+            events.forEach(eventType => {
+                document.addEventListener(eventType, (e) => {
+                    if (e.target.closest('#regular-editor-1')) {
+                        logRegularEvent('DOCUMENT-LEVEL', eventType, e);
+                    }
+                }, true);
+            });
+
+            // CKEditor model changes
+            editor.model.document.on('change:data', () => {
+                console.log('📝 Regular CKEditor model changed');
+            });
+        }
+
+        function logRegularEvent(source, type, event) {
+            const eventInfo = {
+                source,
+                type,
+                target: event.target.tagName,
+                contentEditable: event.target.contentEditable,
+                defaultPrevented: event.defaultPrevented,
+                cancelBubble: event.cancelBubble,
+                bubbles: event.bubbles,
+                composed: event.composed
+            };
+
+            if (type.includes('input')) {
+                eventInfo.data = event.data;
+                eventInfo.inputType = event.inputType;
+            }
+
+            console.log(`🎯 [REGULAR] ${source} → ${type}:`, eventInfo);
+            
+            // Add to debug panel
+            const debugPanel = document.getElementById('debug-events');
+            if (debugPanel) {
+                const entry = document.createElement('div');
+                entry.style.cssText = 'padding: 5px; margin: 2px 0; background: #e3f2fd; border-left: 3px solid #2196f3; font-size: 12px;';
+                entry.textContent = `${new Date().toLocaleTimeString()}.${new Date().getMilliseconds()} | ${eventInfo.source} → ${eventInfo.type} | bubbles: ${eventInfo.bubbles} | prevented: ${eventInfo.defaultPrevented}`;
+                debugPanel.insertBefore(entry, debugPanel.firstChild);
+                
+                while (debugPanel.children.length > 20) {
+                    debugPanel.removeChild(debugPanel.lastChild);
+                }
+            }
+        }
+
+        // Debug panel helper functions
+        function clearDebugPanel() {
+            const debugPanel = document.getElementById('debug-events');
+            if (debugPanel) {
+                debugPanel.innerHTML = '';
+                console.log('🧹 Debug panel cleared');
+            }
+        }
+
+        function toggleDebugPanel() {
+            const container = document.getElementById('debug-panel-container');
+            if (container) {
+                container.style.display = container.style.display === 'none' ? 'block' : 'none';
+            }
+        }
 
         // Verification functions
         function checkShadowDOM() {
@@ -406,11 +595,37 @@
             output.style.display = 'block';
         }
 
+        // Add window-level listeners to simulate LCA's behavior
+        function setupWindowLevelDebugging() {
+            console.log('🪟 Setting up window-level event listeners (simulating LCA)');
+            
+            const events = ['input', 'keydown', 'keyup'];
+            events.forEach(eventType => {
+                window.addEventListener(eventType, (e) => {
+                    // Check if event is from CKEditor
+                    const isCKEditor = e.target.closest('.ck-editor') || e.target.classList.contains('ck-editor__editable');
+                    if (isCKEditor) {
+                        console.log(`🪟 WINDOW-LEVEL (capture) → ${eventType}:`, {
+                            target: e.target.tagName,
+                            contentEditable: e.target.contentEditable,
+                            className: e.target.className,
+                            defaultPrevented: e.defaultPrevented,
+                            propagationStopped: e.cancelBubble
+                        });
+                    }
+                }, true); // Capture phase, like LCA
+            });
+        }
+
         // Auto-run initial check after page loads
         window.addEventListener('load', () => {
             setTimeout(() => {
                 console.log('🎯 POC Test Page Ready!');
                 console.log('Run checkShadowDOM() in console to verify Shadow DOM setup');
+                console.log('📊 Debug panel shows real-time event capture');
+                
+                // Setup window-level debugging
+                setupWindowLevelDebugging();
             }, 1000);
         });
     </script>
